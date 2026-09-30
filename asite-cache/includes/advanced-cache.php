@@ -58,7 +58,7 @@ define('ASITE_CACHE_DROPIN', '1.0.0');
 
     if (!is_file($file)) { header('X-Asite-Cache: MISS'); return; }
     $age = time() - (int) @filemtime($file);
-    if ($age > (int) $c['lifespan']) { header('X-Asite-Cache: EXPIRED'); return; }
+    if ((int) $c['lifespan'] > 0 && $age > (int) $c['lifespan']) { header('X-Asite-Cache: EXPIRED'); return; }   // 0 = uendelig
 
     header('Content-Type: text/html; charset=UTF-8');
     header('X-Asite-Cache: HIT');

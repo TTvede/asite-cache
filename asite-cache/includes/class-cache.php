@@ -259,7 +259,7 @@ class Asite_Cache {
     public static function cleanup_expired() {
         $life = (int) self::settings()['lifespan'];
         $dir = self::cache_dir();
-        if (!is_dir($dir)) { return; }
+        if ($life <= 0 || !is_dir($dir)) { return; }   // 0 = uendelig: kun tømning ved ændringer
         $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
         foreach ($it as $f) {
             if ($f->isFile() && (time() - $f->getMTime()) > $life) { @unlink($f->getPathname()); }

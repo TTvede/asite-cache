@@ -54,7 +54,7 @@ class Asite_Cache_Admin {
                 $s = Asite_Cache::settings();
                 $ny = [
                     'enabled'      => !empty($_POST['enabled']),
-                    'lifespan'     => max(1, (int) ($_POST['lifespan_hours'] ?? 10)) * HOUR_IN_SECONDS,
+                    'lifespan'     => max(0, (int) ($_POST['lifespan_hours'] ?? 10)) * HOUR_IN_SECONDS,   // 0 = uendelig
                     'preload'      => !empty($_POST['preload']),
                     'exclude'      => sanitize_textarea_field(wp_unslash($_POST['exclude'] ?? '')),
                     'remove_emoji' => !empty($_POST['remove_emoji']),
@@ -113,8 +113,8 @@ class Asite_Cache_Admin {
                 <table class="form-table" role="presentation">
                     <tr><th scope="row">Cache</th><td><label><input type="checkbox" name="enabled" value="1" <?php checked(!empty($s['enabled'])); ?>> Slå sidecache til</label>
                         <p class="description">Anonyme besøgende får en færdig side. Indloggede, kurv, kasse og konto caches aldrig.</p></td></tr>
-                    <tr><th scope="row">Levetid</th><td><input type="number" min="1" max="72" name="lifespan_hours" value="<?php echo (int) ($s['lifespan'] / HOUR_IN_SECONDS); ?>" style="width:80px"> timer
-                        <p class="description">Højst 12 timer, hvis sitet har formularer (WordPress' sikkerhedsnøgler udløber).</p></td></tr>
+                    <tr><th scope="row">Levetid</th><td><input type="number" min="0" max="8760" name="lifespan_hours" value="<?php echo (int) ($s['lifespan'] / HOUR_IN_SECONDS); ?>" style="width:80px"> timer
+                        <p class="description"><strong>0 = uendelig</strong> – siderne fornyes kun, når indhold ændres (anbefalet). Brug fx 10 timer, hvis sitet har formularer med WordPress-sikkerhedsnøgler (nonce), som udløber efter 12–24 timer.</p></td></tr>
                     <tr><th scope="row">Forvarmning</th><td><label><input type="checkbox" name="preload" value="1" <?php checked(!empty($s['preload'])); ?>> Hent siderne fra sitemappet igen efter tømning</label></td></tr>
                     <tr><th scope="row">Cache ikke</th><td><textarea name="exclude" rows="6" cols="50" class="code"><?php echo esc_textarea($s['exclude']); ?></textarea>
                         <p class="description">Én sti pr. linje, fx <code>/kontakt/</code>. Alt, der starter med stien, udelades.</p></td></tr>
