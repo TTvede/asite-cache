@@ -48,6 +48,10 @@ class Asite_Cache {
         add_action('woocommerce_product_set_stock', [__CLASS__, 'on_wc_product']);
         add_action('woocommerce_variation_set_stock', [__CLASS__, 'on_wc_product']);
 
+        // Hold drop-in'en ajour efter en plugin-opdatering (kun hvis den er vores).
+        add_action('admin_init', [__CLASS__, 'sync_dropin']);
+        add_action('upgrader_process_complete', [__CLASS__, 'sync_dropin'], 20);
+
         // Vedligehold og forvarmning.
         add_action('asite_cache_cleanup', [__CLASS__, 'cleanup_expired']);
         add_action('asite_cache_preload', [__CLASS__, 'preload_batch']);
@@ -329,6 +333,13 @@ class Asite_Cache {
             return new WP_Error('copy', 'Kunne ikke skrive wp-content/advanced-cache.php (rettigheder).');
         }
         return self::set_wp_cache(true);
+    }
+
+    public static function sync_dropin() {
+        if (self::dropin_status() !== 'ours') { return; }
+        $kilde = ASITE_CACHE_DIR . 'includes/advanced-cache.php';
+        $maal  = WP_CONTENT_DIR . '/advanced-cache.php';
+        if (is_file($kilde) && md5_file($kilde) !== md5_file($maal)) { @copy($kilde, $maal); }
     }
 
     public static function remove_dropin() {
