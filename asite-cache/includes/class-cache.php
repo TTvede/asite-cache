@@ -194,9 +194,21 @@ class Asite_Cache {
     }
 
     public static function on_option($option) {
-        // Globale indstillinger, der ændrer alle sider (Breakdance-design, forside, permalinks, sitenavn).
-        static $globale = ['blogname', 'blogdescription', 'show_on_front', 'page_on_front', 'permalink_structure', 'breakdance_global_settings_json_string', 'breakdance_variables_json_string', 'breakdance_classes_json_string'];
-        if (in_array($option, $globale, true) || strpos($option, 'breakdance_global') === 0) {
+        // Globale indstillinger, der ændrer alle sider (forside, permalinks, sitenavn, Breakdance-design).
+        // Breakdance gemmer sit design med set_global_option(), som sætter »breakdance_« foran navnet
+        // (klasserne hedder derfor breakdance_oxy_selectors_json_string – ikke breakdance_classes_json_string,
+        // som stod her før). Når design gemmes, skriver Breakdance også breakdance_global_css_cache med nye
+        // filversioner; den alene ville fange det meste, men navnene står her, så det ikke afhænger af den.
+        static $globale = [
+            'blogname', 'blogdescription', 'show_on_front', 'page_on_front', 'permalink_structure',
+            'breakdance_oxy_selectors_json_string',       // klasser (selectors)
+            'breakdance_breakdance_classes_json_string',  // ældre klasser
+            'breakdance_global_settings_json_string',     // globale indstillinger
+            'breakdance_variables_json_string',           // variabler
+            'breakdance_presets_json_string',             // design-presets
+            'breakdance_global_css_cache',                // genereret global CSS (nye filversioner)
+        ];
+        if (in_array($option, $globale, true)) {
             self::purge_all();
         }
     }
