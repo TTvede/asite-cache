@@ -107,6 +107,7 @@ class Asite_Cache {
         if (!preg_match('/^\s*(<!doctype html|<html)/i', $html)) { return $html; }
         $path = (string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
         if (preg_match('#\.[a-z0-9]{2,5}$#i', $path)) { return $html; }   // stier med filendelse (sitemap.xml, robots.txt …)
+        if (substr((string) get_option('permalink_structure'), -1) === '/' && $path !== '/' && substr($path, -1) !== '/') { return $html; }   // /side deler fil med /side/
         foreach (headers_list() as $h) {
             if (stripos($h, 'Location:') === 0) { return $html; }           // viderestilling
             if (stripos($h, 'Content-Type:') === 0 && stripos($h, 'text/html') === false) { return $html; }
@@ -323,6 +324,7 @@ class Asite_Cache {
             'ignore_query'   => self::ignore_query(),
             'bypass_cookies' => self::bypass_cookies(),
             'hosts'          => array_map('strtolower', $hosts),
+            'slash'          => substr((string) get_option('permalink_structure'), -1) === '/',
         ];
         wp_mkdir_p(WP_CONTENT_DIR . '/asite-cache');
         $php = "<?php\n// Skrevet af Asite Cache – ret i Værktøjer → Asite Cache, ikke her.\nreturn " . var_export($conf, true) . ";\n";

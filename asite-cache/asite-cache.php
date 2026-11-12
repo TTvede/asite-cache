@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Asite Cache
  * Description: Enkel og hurtig sidecache med ét-kliks tømning. Automatisk tømning ved ændringer, forvarmning fra sitemap, WooCommerce-sikker. Opdateres fra GitHub.
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: Asite
  * Requires at least: 6.4
  * Requires PHP: 7.4
@@ -10,7 +10,7 @@
  */
 if (!defined('ABSPATH')) { exit; }
 
-define('ASITE_CACHE_VERSION', '1.0.3');
+define('ASITE_CACHE_VERSION', '1.0.4');
 define('ASITE_CACHE_DIR', plugin_dir_path(__FILE__));
 
 require_once ASITE_CACHE_DIR . 'includes/class-cache.php';

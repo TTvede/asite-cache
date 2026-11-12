@@ -27,6 +27,10 @@ define('ASITE_CACHE_DROPIN', '1.0.0');
     if (!is_string($path) || $path === '') { return; }
     if (preg_match('#(^|/)(wp-admin|wp-login\.php|wp-json|xmlrpc\.php|wp-cron\.php|feed)(/|$)#', $path)) { return; }
     if (preg_match('#\.(php|xml|txt|json|xsl)$#i', $path)) { return; }
+    // /side og /side/ deler cachefil. Kræver permalinks en afsluttende skråstreg, skal /side til WordPress, som sender
+    // 301 til /side/ – ellers fik /side en 200-kopi (dobbelt indhold; terrasse.nu 12-11-2026). Mangler nøglen
+    // (config fra før 1.0.4), gælder WordPress' almindelige struktur med skråstreg.
+    if (($c['slash'] ?? true) && $path !== '/' && substr($path, -1) !== '/' && !preg_match('#\.[a-z0-9]{2,5}$#i', $path)) { return; }
 
     // Forespørgselsstreng: kun kendte sporingsparametre må ignoreres.
     $query = parse_url($uri, PHP_URL_QUERY);
