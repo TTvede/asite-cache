@@ -16,6 +16,7 @@ class Asite_Cache {
             'preload'        => true,
             'exclude'        => "/wp-admin/\n/kurv/\n/kassen/\n/min-konto/\n/cart/\n/checkout/\n/my-account/",
             'remove_emoji'   => false,
+            'ignore_extra'   => '',   // sitets egne parametre, der ikke ændrer serverens HTML (fx terrasse.nu: img)
         ];
     }
 
@@ -301,8 +302,19 @@ class Asite_Cache {
 
     /* ----------------------------------------------------- konfiguration/drop-in */
 
+    /**
+     * Parametre, der aldrig ændrer serverens HTML – en forespørgsel med kun dem får siden fra cachen.
+     * 1.0.5 (terrasse.nu 23-11-2026): Google Ads sætter i dag gad_source (og gad_campaignid) på næsten alle klik, og
+     * Google-søgning kan sætte srsltid. De manglede, så annoncetrafikken fik siden uden cache (2,4 s mod 0,09 s).
+     * Sitets egne parametre lægges til i Værktøjer → Asite Cache (`ignore_extra`) – kun dem, siden læser i browseren.
+     */
     public static function ignore_query() {
-        return ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'gbraid', 'wbraid', 'fbclid', 'msclkid', 'mc_cid', 'mc_eid', '_ga', 'ref'];
+        $faste = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id',
+            'gclid', 'gbraid', 'wbraid', 'gclsrc', 'dclid', 'gad_source', 'gad_campaignid', 'srsltid', '_gl',
+            'fbclid', 'igshid', 'msclkid', 'ttclid', 'twclid', 'li_fat_id', 'yclid', 'mc_cid', 'mc_eid', 'mkt_tok', '_ga', 'ref'];
+        $egne = preg_split('/[\s,]+/', strtolower((string) (self::settings()['ignore_extra'] ?? '')), -1, PREG_SPLIT_NO_EMPTY);
+        $egne = array_filter($egne, function ($k) { return (bool) preg_match('/^[a-z0-9_-]{1,40}$/', $k); });
+        return array_values(array_unique(array_merge($faste, $egne)));
     }
 
     public static function bypass_cookies() {

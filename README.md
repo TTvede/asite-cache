@@ -4,7 +4,7 @@ Enkel og hurtig sidecache til WordPress med ét-kliks tømning. Bygget til Asite
 
 ## Hvad den gør
 - Gemmer hver offentlig side som færdig HTML og leverer den via `advanced-cache.php`, før WordPress starter (header `X-Asite-Cache: HIT/MISS`).
-- Cacher aldrig: indloggede, POST, søgning, 404, preview, adgangskodebeskyttet, kurv/kasse/konto (WooCommerce), ukendte forespørgselsparametre, stier med filendelse, udelukkede stier. `utm_*`, `gclid`, `fbclid` m.fl. ignoreres.
+- Cacher aldrig: indloggede, POST, søgning, 404, preview, adgangskodebeskyttet, kurv/kasse/konto (WooCommerce), ukendte forespørgselsparametre, stier med filendelse, udelukkede stier. `utm_*`, `gclid`, `gad_source`, `srsltid`, `fbclid` m.fl. ignoreres (1.0.5: Google Ads' `gad_source` manglede, så annonceklik fik siden uden cache). Sitets egne parametre, som kun læses i browseren, lægges til i »Ignorér også« (fx terrasse.nu: `img`).
 - Tømmer automatisk: gemt side + forside + forælder + arkiver/termer; alt ved ændring af Breakdance-skabeloner/header/footer/globale indstillinger, menu, tema, plugins, forsidevalg. WooCommerce-lager tømmer produktet.
 - Forvarmer fra sitemappet (Rank Math, WordPress, sitemap.xml) i baggrunden.
 - Levetid (standard 10 t – kortere end WordPress' nonce-levetid, så formularer virker). Timevis oprydning.

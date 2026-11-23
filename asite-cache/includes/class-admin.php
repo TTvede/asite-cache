@@ -58,6 +58,7 @@ class Asite_Cache_Admin {
                     'preload'      => !empty($_POST['preload']),
                     'exclude'      => sanitize_textarea_field(wp_unslash($_POST['exclude'] ?? '')),
                     'remove_emoji' => !empty($_POST['remove_emoji']),
+                    'ignore_extra' => sanitize_textarea_field(wp_unslash($_POST['ignore_extra'] ?? '')),
                 ];
                 if ($ny['enabled'] && Asite_Cache::dropin_status() !== 'ours') {
                     $r = Asite_Cache::install_dropin();
@@ -118,6 +119,8 @@ class Asite_Cache_Admin {
                     <tr><th scope="row">Forvarmning</th><td><label><input type="checkbox" name="preload" value="1" <?php checked(!empty($s['preload'])); ?>> Hent siderne fra sitemappet igen efter tømning</label></td></tr>
                     <tr><th scope="row">Cache ikke</th><td><textarea name="exclude" rows="6" cols="50" class="code"><?php echo esc_textarea($s['exclude']); ?></textarea>
                         <p class="description">Én sti pr. linje, fx <code>/kontakt/</code>. Alt, der starter med stien, udelades.</p></td></tr>
+                    <tr><th scope="row">Ignorér også</th><td><textarea name="ignore_extra" rows="2" cols="50" class="code"><?php echo esc_textarea($s['ignore_extra'] ?? ''); ?></textarea>
+                        <p class="description">Sitets egne parametre, der ikke ændrer siden på serveren (kun læses i browseren), fx <code>img</code>. Én pr. linje. Sporingsparametre (<code>utm_*</code>, <code>gclid</code>, <code>gad_source</code> …) ignoreres altid.</p></td></tr>
                     <tr><th scope="row">Ekstra</th><td><label><input type="checkbox" name="remove_emoji" value="1" <?php checked(!empty($s['remove_emoji'])); ?>> Fjern WordPress' emoji-script (sparer ca. 20 KB pr. side)</label></td></tr>
                 </table>
                 <?php submit_button('Gem indstillinger'); ?>
