@@ -52,6 +52,9 @@ class Asite_Cache {
         // Hold drop-in'en ajour efter en plugin-opdatering (kun hvis den er vores).
         add_action('admin_init', [__CLASS__, 'sync_dropin']);
         add_action('upgrader_process_complete', [__CLASS__, 'sync_dropin'], 20);
+        // … og config.php (listen over ignorerede parametre m.m.): ved en automatisk opdatering kører
+        // upgrader_process_complete med den GAMLE kode i hukommelsen, og admin_init kommer måske først om dage.
+        add_action('init', [__CLASS__, 'sync_config'], 1);
 
         // Vedligehold og forvarmning.
         add_action('asite_cache_cleanup', [__CLASS__, 'cleanup_expired']);
@@ -366,6 +369,17 @@ class Asite_Cache {
         $kilde = ASITE_CACHE_DIR . 'includes/advanced-cache.php';
         $maal  = WP_CONTENT_DIR . '/advanced-cache.php';
         if (is_file($kilde) && md5_file($kilde) !== md5_file($maal)) { @copy($kilde, $maal); }
+    }
+
+    /**
+     * Første forespørgsel efter en ny version skriver config.php igen (1.0.5, 24-11-2026): uden det fik et site, der
+     * opdaterede automatisk, den nye kode, men drop-in'en læste stadig den gamle parameterliste (fx uden gad_source),
+     * indtil nogen gemte indstillingerne. Én autoloaded option at sammenligne – ellers intet.
+     */
+    public static function sync_config() {
+        if (get_option('asite_cache_config_version') === ASITE_CACHE_VERSION) { return; }
+        if (self::dropin_status() === 'ours') { self::sync_dropin(); self::write_config(); }
+        update_option('asite_cache_config_version', ASITE_CACHE_VERSION, true);
     }
 
     public static function remove_dropin() {
