@@ -241,6 +241,10 @@ class Asite_Cache {
         $batch = array_splice($queue, 0, 10);
         update_option('asite_cache_preload_queue', $queue, false);
         foreach ($batch as $u) {
+            // En side, der fornyes før udløb, ligger stadig i cachen – så ville drop-in'en svare med den gamle (HIT).
+            // Filen fjernes lige før, så forespørgslen bygger og gemmer siden på ny. Efter en tømning er den væk i forvejen.
+            $fil = self::file_for_url($u);
+            if ($fil && is_file($fil)) { @unlink($fil); }
             wp_remote_get($u, ['timeout' => 20, 'blocking' => true, 'sslverify' => false, 'cookies' => [], 'headers' => ['User-Agent' => 'Asite Cache forvarmning']]);
         }
         if ($queue) { wp_schedule_single_event(time() + 5, 'asite_cache_preload'); }
@@ -281,11 +285,35 @@ class Asite_Cache {
         $life = (int) self::settings()['lifespan'];
         $dir = self::cache_dir();
         if ($life <= 0 || !is_dir($dir)) { return; }   // 0 = uendelig: kun tømning ved ændringer
+        // 1.0.6 (terrasse.nu 24-11-2026): før blev en udløbet side bare slettet, og den næste besøgende (eller Googlebot)
+        // fik den bygget uden cache – ca. 2,4 s til første byte. På et site med lidt trafik er det de fleste besøg på de
+        // fleste sider. Nu fornyes sider, der udløber inden næste oprydning (om en time + lidt luft), i forvarmningen.
+        $forny = [];
+        $snart = max(0, $life - (HOUR_IN_SECONDS + 15 * MINUTE_IN_SECONDS));
         $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
         foreach ($it as $f) {
-            if ($f->isFile() && (time() - $f->getMTime()) > $life) { @unlink($f->getPathname()); }
+            if ($f->isFile()) {
+                $alder = time() - $f->getMTime();
+                if ($alder > $snart && ($u = self::url_for_file($f->getPathname()))) { $forny[] = $u; }
+                if ($alder > $life) { @unlink($f->getPathname()); }
+            }
             elseif ($f->isDir()) { @rmdir($f->getPathname()); }   // fjernes kun, hvis den er tom
         }
+        if ($forny) { self::schedule_preload($forny); }   // gør intet, hvis forvarmning er slået fra
+    }
+
+    /** Omvendt af file_for_url: cachefilens sti → sidens adresse (kun vores egne værter). */
+    public static function url_for_file($fil) {
+        $rod = self::cache_dir() . '/';
+        if (strpos($fil, $rod) !== 0 || !preg_match('#/index(-https)?\.html$#', $fil, $m)) { return false; }
+        $rel = substr(dirname($fil), strlen($rod));          // host[/sti]
+        $dele = explode('/', $rel, 2);
+        $host = $dele[0];
+        $kendte = array_filter([wp_parse_url(home_url(), PHP_URL_HOST), wp_parse_url(site_url(), PHP_URL_HOST)]);
+        if (!in_array($host, array_map('strtolower', $kendte), true)) { return false; }
+        $sti = isset($dele[1]) && $dele[1] !== '' ? '/' . $dele[1] : '';
+        $slash = substr((string) get_option('permalink_structure'), -1) === '/';
+        return (!empty($m[1]) ? 'https' : 'http') . '://' . $host . ($sti === '' ? '/' : $sti . ($slash ? '/' : ''));
     }
 
     public static function stats() {
